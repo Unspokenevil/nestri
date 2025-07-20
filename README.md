@@ -10,8 +10,8 @@
 <p align="center">Deploy and stream games/apps in the cloud. Use our GPUs or bring your own.</p>
 <p align="center">
   <a href="https://discord.com/invite/Y6etn3qKZ3"><img alt="Discord" src="https://img.shields.io/discord/1080111004698021909?style=flat-square&label=discord" /></a>
-  <a href="https://github.com/nestrilabs/nestri/blob/main/LICENSE"><img alt="Nestri License" src="https://img.shields.io/github/license/nestriness/nestri?style=flat-square" /></a>
-  <a href="https://github.com/nestrilabs/nestri/actions/workflows/runner.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/nestrilabs/nestri/runner.yml?style=flat-square&branch=main" /></a>
+  <a href="https://github.com/nestrilabs/nestri/blob/dev/LICENSE"><img alt="Nestri License" src="https://img.shields.io/github/license/nestriness/nestri?style=flat-square" /></a>
+  <a href="https://github.com/nestrilabs/nestri/actions/workflows/runner.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/nestrilabs/nestri/runner.yml?style=flat-square&branch=dev" /></a>
  <!-- <a href="https://nestri.io" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Start%20Playing%20Now-For%20$1/hour-brightgreen?style=flat-square" alt="Umami Demo" />
   </a>  -->
