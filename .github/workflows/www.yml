@@ -6,7 +6,7 @@ on:
       - "apps/www/**"
       - ".github/workflows/www.yml"
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "apps/www/**"
       - ".github/workflows/www.yml"

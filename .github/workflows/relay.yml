@@ -8,7 +8,7 @@ on:
             - "packages/relay/**"
             - ".github/workflows/relay.yml"
     push:
-        branches: [main]
+        branches: [dev, production]
         paths:
             - "containers/relay.Containerfile"
             - ".github/workflows/relay.yml"
@@ -45,9 +45,9 @@ jobs:
                 load: true
                 tags: nestri:relay
     
-    build-docker-main:
-        name: Build image on main
-        if: ${{  github.ref == 'refs/heads/main' }}
+    build-and-push-docker:
+        name: Build and push image
+        if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/production' }}
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -73,7 +73,8 @@ jobs:
                 #tag on release, and a nightly build for 'dev'
                 tags: |
                   type=raw,value=nightly,enable={{is_default_branch}}
-                  type=ref,event=tag
+                  type=raw,value={{branch}}
+                  type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'production') }}
                   type=semver,pattern={{version}}
                   type=semver,pattern={{major}}.{{minor}}
                   type=semver,pattern={{major}}
