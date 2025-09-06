@@ -11,22 +11,22 @@ depends=('rust' 'git' 'rustup' 'pkgconf' 'wayland')
 source=("nestri::git+https://github.com/nestriness/nestri.git")
 sha512sums=('SKIP')
 pkgver() {
-        cd "$srcdir/${pkgname%-git}"
-        printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  cd "$srcdir/${pkgname%-git}"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 prepare() {
-        cd "$srcdir/${pkgname%-git}"
+  cd "$srcdir/${pkgname%-git}"
 }
 
 build() {
-        cd "$srcdir/${pkgname%-git}/packages/server"
-        
-        CARGO_TARGET_DIR="./build" sudo cargo build -j$(nproc)
+  cd "$srcdir/${pkgname%-git}/packages/server"
+
+  CARGO_TARGET_DIR="./build" sudo cargo build -j$(nproc)
 }
 
 package() {
-        cd "$srcdir/${pkgname%-git}/packages/server"
+  cd "$srcdir/${pkgname%-git}/packages/server"
 
-        install -m755 -Dt "${pkgdir}/usr/bin" build/release/nestri
+  install -m755 -Dt "${pkgdir}/usr/bin" build/release/nestri
 }
