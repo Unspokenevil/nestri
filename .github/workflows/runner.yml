@@ -5,7 +5,7 @@ name: Build nestri:runner
 on:
     pull_request:
         paths:
-            - "containers/runner.Containerfile"
+            - "containerfiles/runner.Containerfile"
             - "packages/scripts/**"
             - "packages/server/**"
             - ".github/workflows/runner.yml"
@@ -14,7 +14,7 @@ on:
     push:
         branches: [dev, production]
         paths:
-            - "containers/runner.Containerfile"
+            - "containerfiles/runner.Containerfile"
             - ".github/workflows/runner.yml"
             - "packages/scripts/**"
             - "packages/server/**"
@@ -58,7 +58,7 @@ jobs:
               name: Build Docker image
               uses: docker/build-push-action@v6
               with:
-                file: containers/runner.Containerfile
+                file: containerfiles/runner.Containerfile
                 context: ./
                 push: false
                 load: true
@@ -111,7 +111,7 @@ jobs:
               name: Build Docker image
               uses: docker/build-push-action@v6
               with:
-                file:  containers/runner.Containerfile
+                file:  containerfiles/runner.Containerfile
                 context: ./
                 push: true
                 tags: ${{ steps.meta.outputs.tags }}

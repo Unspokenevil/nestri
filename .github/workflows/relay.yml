@@ -4,13 +4,13 @@ name: Build nestri:relay
 on:
     pull_request:
         paths:
-            - "containers/relay.Containerfile"
+            - "containerfiles/relay.Containerfile"
             - "packages/relay/**"
             - ".github/workflows/relay.yml"
     push:
         branches: [dev, production]
         paths:
-            - "containers/relay.Containerfile"
+            - "containerfiles/relay.Containerfile"
             - ".github/workflows/relay.yml"
             - "packages/relay/**"
         tags:
@@ -39,7 +39,7 @@ jobs:
               name: Build Docker image
               uses: docker/build-push-action@v5
               with:
-                file: containers/relay.Containerfile
+                file: containerfiles/relay.Containerfile
                 context: ./
                 push: false
                 load: true
@@ -82,7 +82,7 @@ jobs:
               name: Build Docker image
               uses: docker/build-push-action@v5
               with:
-                file:  containers/relay.Containerfile
+                file:  containerfiles/relay.Containerfile
                 context: ./
                 push: true
                 tags: ${{ steps.meta.outputs.tags }}
