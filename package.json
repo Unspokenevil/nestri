@@ -29,7 +29,8 @@
   ],
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "cloud/packages/*"
   ],
   "dependencies": {
     "sst": "^3.17.8"
