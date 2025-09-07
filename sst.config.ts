@@ -20,19 +20,10 @@ export default $config({
   },
   async run() {
     const fs = await import("fs")
-    
-    $transform(sst.aws.Function, (args) => {
-      args.environment = $resolve([args.environment]).apply(([environment]) => {
-        return {
-          ...environment,
-          NODE_OPTIONS: "--experimental-websocket",
-        };
-      });
-    });
 
     const outputs = {};
-    for (const value of fs.readdirSync("./infra/")) {
-      const result = await import("./infra/" + value);
+    for (const value of fs.readdirSync("./cloud/infra/")) {
+      const result = await import("./cloud/infra/" + value);
       if (result.outputs) Object.assign(outputs, result.outputs);
     }
     return outputs;
