@@ -5,22 +5,17 @@ export default $config({
       name: "nestri",
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
-      home: "aws",
+      home: "cloudflare",
       providers: {
-        aws: {
-          region: "us-east-1",
-          profile:
-            input.stage === "production" ? "nestri-production" : "nestri-dev",
-        },
-        cloudflare: "6.2.0",
+        cloudflare: "6.6.0",
         random: "4.17.0",
         command: "1.0.2",
+        neon: "0.9.0",
       },
     };
   },
   async run() {
-    const fs = await import("fs")
-
+    const fs = await import("fs");
     const outputs = {};
     for (const value of fs.readdirSync("./cloud/infra/")) {
       const result = await import("./cloud/infra/" + value);

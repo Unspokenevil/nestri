@@ -33,6 +33,6 @@
     "cloud/packages/*"
   ],
   "dependencies": {
-    "sst": "^3.17.8"
+    "sst": "^3.17.13"
   }
 }
