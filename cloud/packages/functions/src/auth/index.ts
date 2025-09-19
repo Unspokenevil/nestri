@@ -40,8 +40,8 @@ export default {
       }),
       providers: {
         discord: DiscordAdapter({
-          clientID: Resource.DiscordClientID.value,
-          clientSecret: Resource.DiscordClientSecret.value,
+          clientID: Resource.DISCORD_CLIENT_ID.value,
+          clientSecret: Resource.DISCORD_CLIENT_SECRET.value,
           scopes: ["email", "identify"],
         }),
       },
