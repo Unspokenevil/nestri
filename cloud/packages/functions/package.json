@@ -5,7 +5,8 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/steamcommunity": "^3.43.8"
+    "@types/steamcommunity": "^3.43.8",
+    "@cloudflare/workers-types": "4.20250522.0"
   },
   "peerDependencies": {
     "typescript": "^5"

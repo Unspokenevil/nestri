@@ -5,6 +5,7 @@
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "strict": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "types": ["@cloudflare/workers-types", "node"]
   }
 }
