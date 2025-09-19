@@ -6,6 +6,14 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    "DISCORD_CLIENT_ID": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "DISCORD_CLIENT_SECRET": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Database": {
       "host": string
       "name": string
@@ -13,6 +21,13 @@ declare module "sst" {
       "type": "sst.sst.Linkable"
       "user": string
     }
+  }
+}
+// cloudflare 
+import * as cloudflare from "@cloudflare/workers-types";
+declare module "sst" {
+  export interface Resource {
+    "AuthStorage": cloudflare.KVNamespace
   }
 }
 
