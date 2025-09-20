@@ -43,3 +43,12 @@ export const database = new sst.Linkable("Database", {
     password: dbRole.password,
   },
 });
+
+new sst.x.DevCommand("Studio", {
+  link: [database],
+  dev: {
+    command: "bun db studio",
+    directory: "cloud/packages/core",
+    autostart: true,
+  },
+});
