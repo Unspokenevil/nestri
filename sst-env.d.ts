@@ -21,6 +21,10 @@ declare module "sst" {
       "type": "sst.sst.Linkable"
       "user": string
     }
+    "POLAR_API_KEY": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
   }
 }
 // cloudflare 

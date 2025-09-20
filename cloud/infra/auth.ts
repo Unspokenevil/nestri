@@ -11,6 +11,7 @@ export const auth = new sst.cloudflare.Worker("Auth", {
   link: [
     database,
     authStorage,
+    secret.POLAR_API_KEY,
     secret.DISCORD_CLIENT_ID,
     secret.DISCORD_CLIENT_SECRET,
   ],
