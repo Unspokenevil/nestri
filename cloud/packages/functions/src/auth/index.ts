@@ -7,6 +7,7 @@ import { DiscordAdapter } from "./adapters";
 import { issuer } from "@openauthjs/openauth";
 import { User } from "@nestri/core/user/index";
 import { patchLogger } from "../utils/patch-logger";
+import type { KVNamespace } from "@cloudflare/workers-types";
 import { CloudflareStorage } from "@openauthjs/openauth/storage/cloudflare";
 
 interface Env {

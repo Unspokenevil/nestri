@@ -1,15 +1,17 @@
 import { z } from "zod";
-import { fn } from "../utils";
 import { Resource } from "sst";
+import { fn, memo } from "../utils";
 import { Polar as PolarSdk } from "@polar-sh/sdk";
 import { validateEvent } from "@polar-sh/sdk/webhooks";
 
 export namespace Polar {
-  export const client = () =>
-    new PolarSdk({
-      accessToken: Resource.POLAR_API_KEY.value,
-      server: Resource.App.stage !== "production" ? "sandbox" : "production",
-    });
+  export const client = memo(
+    () =>
+      new PolarSdk({
+        accessToken: Resource.POLAR_API_KEY.value,
+        server: Resource.App.stage !== "production" ? "sandbox" : "production",
+      }),
+  );
 
   export const fromUserEmail = fn(z.string().min(1), async (email) => {
     try {
