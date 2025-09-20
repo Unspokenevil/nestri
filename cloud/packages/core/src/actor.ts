@@ -1,9 +1,8 @@
 import { Log } from "./utils";
-import { createContext } from "./context";
+import { Context } from "./context";
 import { ErrorCodes, VisibleError } from "./error";
 
 export namespace Actor {
-
   export interface User {
     type: "user";
     properties: {
@@ -11,7 +10,7 @@ export namespace Actor {
       email: string;
     };
   }
-  
+
   export interface Steam {
     type: "steam";
     properties: {
@@ -42,10 +41,10 @@ export namespace Actor {
 
   export type Info = User | Public | Token | Machine | Steam;
 
-  export const Context = createContext<Info>();
+  export const CurrentContext = Context.create<Info>();
 
   export function userID() {
-    const actor = Context.use();
+    const actor = CurrentContext.use();
     if ("userID" in actor.properties) return actor.properties.userID;
     throw new VisibleError(
       "authentication",
@@ -55,7 +54,7 @@ export namespace Actor {
   }
 
   export function steamID() {
-    const actor = Context.use();
+    const actor = CurrentContext.use();
     if ("steamID" in actor.properties) return actor.properties.steamID;
     throw new VisibleError(
       "authentication",
@@ -65,7 +64,7 @@ export namespace Actor {
   }
 
   export function user() {
-    const actor = Context.use();
+    const actor = CurrentContext.use();
     if (actor.type == "user") return actor.properties;
     throw new VisibleError(
       "authentication",
@@ -75,7 +74,7 @@ export namespace Actor {
   }
 
   export function teamID() {
-    const actor = Context.use();
+    const actor = CurrentContext.use();
     if ("teamID" in actor.properties) return actor.properties.teamID;
     throw new VisibleError(
       "authentication",
@@ -85,7 +84,7 @@ export namespace Actor {
   }
 
   export function fingerprint() {
-    const actor = Context.use();
+    const actor = CurrentContext.use();
     if ("fingerprint" in actor.properties) return actor.properties.fingerprint;
     throw new VisibleError(
       "authentication",
@@ -96,7 +95,7 @@ export namespace Actor {
 
   export function use() {
     try {
-      return Context.use();
+      return CurrentContext.use();
     } catch {
       return { type: "public", properties: {} } as Public;
     }
@@ -117,7 +116,7 @@ export namespace Actor {
     T extends Info["type"],
     Next extends (...args: any) => any,
   >(type: T, properties: Extract<Info, { type: T }>["properties"], fn: Next) {
-    return Context.provide({ type, properties } as any, () =>
+    return CurrentContext.provide({ type, properties } as any, () =>
       Log.provide(
         {
           actor: type,

@@ -31,6 +31,7 @@ declare module "sst" {
 import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
+    "Auth": cloudflare.Service
     "AuthStorage": cloudflare.KVNamespace
   }
 }

@@ -1,7 +1,7 @@
-import { createContext } from "../context";
+import { Context } from "../context";
 
 export namespace Log {
-  const ctx = createContext<{
+  const ctx = Context.create<{
     tags: Record<string, any>;
   }>();
 
@@ -42,7 +42,7 @@ export namespace Log {
         return result;
       },
       tag(key: string, value: string) {
-         // Immutable update: return a fresh logger with updated tags
+        // Immutable update: return a fresh logger with updated tags
         return Log.create({ ...tags, [key]: value });
       },
       clone() {
