@@ -64,14 +64,14 @@ pub struct EncodingOptionsBase {
     /// Codec (e.g. "h264", "opus" etc.)
     pub codec: Codec,
     /// Overridable encoder (e.g. "vah264lpenc", "opusenc" etc.)
-    pub encoder: String,
+    pub encoder: Option<String>,
     /// Rate control method (e.g. "cqp", "vbr", "cbr")
     pub rate_control: RateControl,
 }
 impl EncodingOptionsBase {
     pub fn debug_print(&self) {
         tracing::info!("> Codec: '{}'", self.codec.as_str());
-        tracing::info!("> Encoder: '{}'", self.encoder);
+        tracing::info!("> Encoder: '{}'", self.encoder.as_deref().unwrap_or("auto"));
         match &self.rate_control {
             RateControl::CQP(cqp) => {
                 tracing::info!("> Rate Control: CQP");
@@ -93,6 +93,7 @@ impl EncodingOptionsBase {
 pub struct VideoEncodingOptions {
     pub base: EncodingOptionsBase,
     pub encoder_type: EncoderType,
+    pub bit_depth: u32,
 }
 impl VideoEncodingOptions {
     pub fn from_matches(matches: &clap::ArgMatches) -> Self {
@@ -104,10 +105,7 @@ impl VideoEncodingOptions {
                         .unwrap_or(&VideoCodec::H264)
                         .clone(),
                 ),
-                encoder: matches
-                    .get_one::<String>("video-encoder")
-                    .unwrap_or(&"".to_string())
-                    .clone(),
+                encoder: matches.get_one::<String>("video-encoder").cloned(),
                 rate_control: match matches
                     .get_one::<RateControlMethod>("video-rate-control")
                     .unwrap_or(&RateControlMethod::CBR)
@@ -132,6 +130,10 @@ impl VideoEncodingOptions {
                 .get_one::<EncoderType>("video-encoder-type")
                 .unwrap_or(&EncoderType::HARDWARE)
                 .clone(),
+            bit_depth: matches
+                .get_one::<u32>("video-bit-depth")
+                .copied()
+                .unwrap_or(8),
         }
     }
 
@@ -139,6 +141,7 @@ impl VideoEncodingOptions {
         tracing::info!("Video Encoding Options:");
         self.base.debug_print();
         tracing::info!("> Encoder Type: {}", self.encoder_type.as_str());
+        tracing::info!("> Bit Depth: {}", self.bit_depth);
     }
 }
 impl Deref for VideoEncodingOptions {
@@ -191,10 +194,7 @@ impl AudioEncodingOptions {
                         .unwrap_or(&AudioCodec::OPUS)
                         .clone(),
                 ),
-                encoder: matches
-                    .get_one::<String>("audio-encoder")
-                    .unwrap_or(&"".to_string())
-                    .clone(),
+                encoder: matches.get_one::<String>("audio-encoder").cloned(),
                 rate_control: match matches
                     .get_one::<RateControlMethod>("audio-rate-control")
                     .unwrap_or(&RateControlMethod::CBR)

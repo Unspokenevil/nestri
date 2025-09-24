@@ -25,43 +25,42 @@ use tracing_subscriber::filter::LevelFilter;
 // Handles gathering GPU information and selecting the most suitable GPU
 fn handle_gpus(args: &args::Args) -> Result<Vec<gpu::GPUInfo>, Box<dyn Error>> {
     tracing::info!("Gathering GPU information..");
-    let mut gpus = gpu::get_gpus();
+    let mut gpus = gpu::get_gpus()?;
     if gpus.is_empty() {
         return Err("No GPUs found".into());
     }
     for (i, gpu) in gpus.iter().enumerate() {
-        tracing::info!(
-            "> [GPU:{}]  Vendor: '{}', Card Path: '{}', Render Path: '{}', Device Name: '{}'",
-            i,
-            gpu.vendor_string(),
-            gpu.card_path(),
-            gpu.render_path(),
-            gpu.device_name()
-        );
+        tracing::info!("> [GPU:{}] {}", i, gpu);
     }
 
     // Additional GPU filtering
-    if !args.device.gpu_card_path.is_empty() {
-        if let Some(gpu) = gpu::get_gpu_by_card_path(&gpus, &args.device.gpu_card_path) {
-            return Ok(Vec::from([gpu]));
-        }
+    if let Some(gpu_card_path) = &args.device.gpu_card_path {
+        return match gpu::get_gpu_by_card_path(&gpus, gpu_card_path.as_str()) {
+            Some(gpu) => Ok(Vec::from([gpu])),
+            None => Err(format!(
+                "No GPU found with the specified card path: '{}'",
+                gpu_card_path
+            )
+            .into()),
+        };
     } else {
         // Run all filters that are not empty
         let mut filtered_gpus = gpus.clone();
-        if !args.device.gpu_vendor.is_empty() {
-            filtered_gpus = gpu::get_gpus_by_vendor(&filtered_gpus, &args.device.gpu_vendor);
+        if let Some(gpu_vendor) = &args.device.gpu_vendor {
+            filtered_gpus =
+                gpu::get_gpus_by_vendor(&filtered_gpus, GPUVendor::from(gpu_vendor.clone()));
         }
-        if !args.device.gpu_name.is_empty() {
-            filtered_gpus = gpu::get_gpus_by_device_name(&filtered_gpus, &args.device.gpu_name);
+        if let Some(gpu_name) = &args.device.gpu_name {
+            filtered_gpus = gpu::get_gpus_by_device_name(&filtered_gpus, gpu_name.as_str());
         }
-        if args.device.gpu_index > -1 {
+        if let Some(gpu_index) = &args.device.gpu_index {
             // get single GPU by index
-            let gpu_index = args.device.gpu_index as usize;
+            let gpu_index = *gpu_index as usize;
             if gpu_index >= filtered_gpus.len() {
                 return Err(format!(
                     "GPU index {} is out of bounds for available GPUs (0-{})",
                     gpu_index,
-                    filtered_gpus.len() - 1
+                    filtered_gpus.len().saturating_sub(1)
                 )
                 .into());
             }
@@ -77,10 +76,10 @@ fn handle_gpus(args: &args::Args) -> Result<Vec<gpu::GPUInfo>, Box<dyn Error>> {
     if gpus.is_empty() {
         return Err(format!(
             "No GPU(s) found with the specified parameters: vendor='{}', name='{}', index='{}', card_path='{}'",
-            args.device.gpu_vendor,
-            args.device.gpu_name,
-            args.device.gpu_index,
-            args.device.gpu_card_path
+            args.device.gpu_vendor.as_deref().unwrap_or("auto"),
+            args.device.gpu_name.as_deref().unwrap_or("auto"),
+            args.device.gpu_index.map_or("auto".to_string(), |i| i.to_string()),
+            args.device.gpu_card_path.as_deref().unwrap_or("auto")
         ).into());
     }
     Ok(gpus)
@@ -112,9 +111,8 @@ fn handle_encoder_video(
     }
     // Pick most suitable video encoder based on given arguments
     let video_encoder;
-    if !args.encoding.video.encoder.is_empty() {
-        video_encoder =
-            enc_helper::get_encoder_by_name(&video_encoders, &args.encoding.video.encoder)?;
+    if let Some(wanted_encoder) = &args.encoding.video.encoder {
+        video_encoder = enc_helper::get_encoder_by_name(&video_encoders, wanted_encoder.as_str())?;
     } else {
         video_encoder = enc_helper::get_best_working_encoder(
             &video_encoders,
@@ -164,11 +162,12 @@ fn handle_encoder_video_settings(
 // Handles picking audio encoder
 // TODO: Expand enc_helper with audio types, for now just opus
 fn handle_encoder_audio(args: &args::Args) -> String {
-    let audio_encoder = if args.encoding.audio.encoder.is_empty() {
-        "opusenc".to_string()
-    } else {
-        args.encoding.audio.encoder.clone()
-    };
+    let audio_encoder = args
+        .encoding
+        .audio
+        .encoder
+        .clone()
+        .unwrap_or_else(|| "opusenc".to_string());
     tracing::info!("Selected audio encoder: '{}'", audio_encoder);
     audio_encoder
 }
@@ -196,10 +195,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Get relay URL from arguments
     let relay_url = args.app.relay_url.trim();
-
-    // Initialize libp2p (logically the sink should handle the connection to be independent)
-    let nestri_p2p = Arc::new(NestriP2P::new().await?);
-    let p2p_conn = nestri_p2p.connect(relay_url).await?;
 
     gstreamer::init()?;
     let _ = gstrswebrtc::plugin_register_static(); // Might be already registered, so we'll pass..
@@ -239,6 +234,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Handle audio encoder selection
     let audio_encoder = handle_encoder_audio(&args);
 
+    // Initialize libp2p (logically the sink should handle the connection to be independent)
+    let nestri_p2p = Arc::new(NestriP2P::new().await?);
+    let p2p_conn = nestri_p2p.connect(relay_url).await?;
+
     /*** PIPELINE CREATION ***/
     // Create the pipeline
     let pipeline = Arc::new(gstreamer::Pipeline::new());
@@ -250,7 +249,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             gstreamer::ElementFactory::make("pulsesrc").build()?
         }
         encoding_args::AudioCaptureMethod::PIPEWIRE => {
-            gstreamer::ElementFactory::make("pipewiresrc").build()?
+            let pw_element = gstreamer::ElementFactory::make("pipewiresrc").build()?;
+            pw_element.set_property("use-bufferpool", &false); // false for audio
+            pw_element
         }
         encoding_args::AudioCaptureMethod::ALSA => {
             gstreamer::ElementFactory::make("alsasrc").build()?
@@ -279,7 +280,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         },
     );
     // If has "frame-size" (opus), set to 10 for lower latency (below 10 seems to be too low?)
-    if audio_encoder.has_property("frame-size", None) {
+    if audio_encoder.has_property("frame-size") {
         audio_encoder.set_property_from_str("frame-size", "10");
     }
 
@@ -313,6 +314,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     ))?;
     caps_filter.set_property("caps", &caps);
 
+    // Get bit-depth and choose appropriate format (NV12 or P010_10LE)
+    // H.264 does not support above 8-bit. Also we require DMA-BUF.
+    let video_format = if args.encoding.video.bit_depth == 10
+        && args.app.dma_buf
+        && video_encoder_info.codec != enc_helper::VideoCodec::H264
+    {
+        "P010_10LE"
+    } else {
+        "NV12"
+    };
+
     // GL and CUDA elements (NVIDIA only..)
     let mut glupload = None;
     let mut glconvert = None;
@@ -325,7 +337,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         glconvert = Some(gstreamer::ElementFactory::make("glcolorconvert").build()?);
         // GL color convert caps
         let caps_filter = gstreamer::ElementFactory::make("capsfilter").build()?;
-        let gl_caps = gstreamer::Caps::from_str("video/x-raw(memory:GLMemory),format=NV12")?;
+        let gl_caps = gstreamer::Caps::from_str(
+            format!("video/x-raw(memory:GLMemory),format={video_format}").as_str(),
+        )?;
         caps_filter.set_property("caps", &gl_caps);
         gl_caps_filter = Some(caps_filter);
         // CUDA upload element
@@ -341,7 +355,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         vapostproc = Some(gstreamer::ElementFactory::make("vapostproc").build()?);
         // VA caps filter
         let caps_filter = gstreamer::ElementFactory::make("capsfilter").build()?;
-        let va_caps = gstreamer::Caps::from_str("video/x-raw(memory:VAMemory),format=NV12")?;
+        let va_caps = gstreamer::Caps::from_str(
+            format!("video/x-raw(memory:VAMemory),format={video_format}").as_str(),
+        )?;
         caps_filter.set_property("caps", &va_caps);
         va_caps_filter = Some(caps_filter);
     }
