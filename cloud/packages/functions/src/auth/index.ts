@@ -95,6 +95,8 @@ export default {
 
         throw new Error("Something went seriously wrong");
       },
-    }).use(logger());
+    })
+      .use(logger())
+      .fetch(request, env, ctx);
   },
 };

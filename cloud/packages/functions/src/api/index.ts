@@ -9,6 +9,7 @@ import { AccountApi } from "./account";
 import { openAPISpecs } from "hono-openapi";
 import { patchLogger } from "../utils/patch-logger";
 import { HTTPException } from "hono/http-exception";
+import type { Service } from "@cloudflare/workers-types";
 import { ErrorCodes, VisibleError } from "@nestri/core/error";
 
 patchLogger();

@@ -2,7 +2,6 @@ import { z } from "zod";
 import { fn } from "../utils";
 import { Resource } from "sst";
 import { Actor } from "../actor";
-import { bus } from "sst/aws/bus";
 import { Common } from "../common";
 import { Database } from "../drizzle";
 import { Examples } from "../examples";

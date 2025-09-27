@@ -2,14 +2,18 @@ import { Resource } from "sst";
 import { subjects } from "../../subjects";
 import { Actor } from "@nestri/core/actor";
 import { type MiddlewareHandler } from "hono";
+import { memo } from "@nestri/core/utils/memo";
 import { Steam } from "@nestri/core/steam/index";
 import { createClient } from "@openauthjs/openauth/client";
 import { ErrorCodes, VisibleError } from "@nestri/core/error";
 
-const client = createClient({
-  clientID: "api",
-  issuer: Resource.Auth.url,
-});
+const client = memo(() =>
+  createClient({
+    clientID: "api",
+    fetch: (input, init) => Resource.Auth.fetch(input, init),
+    issuer: Resource.Urls.auth,
+  }),
+);
 
 export const notPublic: MiddlewareHandler = async (c, next) => {
   const actor = Actor.use();
@@ -34,7 +38,8 @@ export const auth: MiddlewareHandler = async (c, next) => {
     );
   }
   const bearerToken = match[1];
-  let result = await client.verify(subjects, bearerToken!);
+  //@ts-expect-error
+  let result = await client().verify(subjects, bearerToken!);
   if (result.err) {
     throw new VisibleError(
       "authentication",
@@ -46,22 +51,27 @@ export const auth: MiddlewareHandler = async (c, next) => {
   if (result.subject.type === "user") {
     const steamID = c.req.header("x-nestri-steam");
     if (!steamID) {
-      return Actor.provide(result.subject.type, result.subject.properties, next);
+      return Actor.provide(
+        result.subject.type,
+        // @ts-expect-error
+        result.subject.properties,
+        next,
+      );
     }
-    const userID = result.subject.properties.userID
+    const userID = result.subject.properties.userID;
     return Actor.provide(
       "steam",
       {
-        steamID
+        steamID,
       },
       async () => {
-        const steamAcc = await Steam.confirmOwnerShip(userID)
+        const steamAcc = await Steam.confirmOwnerShip(userID);
         if (!steamAcc) {
           throw new VisibleError(
             "authentication",
             ErrorCodes.Authentication.UNAUTHORIZED,
-            `You don't have permission to access this resource.`
-          )
+            `You don't have permission to access this resource.`,
+          );
         }
         return Actor.provide(
           "member",
@@ -69,8 +79,10 @@ export const auth: MiddlewareHandler = async (c, next) => {
             steamID,
             userID,
           },
-          next)
-      });
+          next,
+        );
+      },
+    );
   }
 
   return Actor.provide("public", {}, next);

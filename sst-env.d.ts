@@ -25,6 +25,13 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Urls": {
+      "api": string
+      "auth": string
+      "openapi": string
+      "site": string
+      "type": "sst.sst.Linkable"
+    }
   }
 }
 // cloudflare 
