@@ -15,4 +15,11 @@ export const auth = new sst.cloudflare.Worker("Auth", {
     secret.DISCORD_CLIENT_ID,
     secret.DISCORD_CLIENT_SECRET,
   ],
+  transform: {
+    worker: {
+      placement: {
+        mode: "smart",
+      },
+    },
+  },
 });
