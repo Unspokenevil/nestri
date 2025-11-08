@@ -20,80 +20,59 @@ pub struct ProtoLatencyTracker {
 
 /// MouseMove message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoMouseMove {
-    /// Fixed value "MouseMove"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub x: i32,
-    #[prost(int32, tag="3")]
+    #[prost(int32, tag="2")]
     pub y: i32,
 }
 /// MouseMoveAbs message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoMouseMoveAbs {
-    /// Fixed value "MouseMoveAbs"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub x: i32,
-    #[prost(int32, tag="3")]
+    #[prost(int32, tag="2")]
     pub y: i32,
 }
 /// MouseWheel message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoMouseWheel {
-    /// Fixed value "MouseWheel"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub x: i32,
-    #[prost(int32, tag="3")]
+    #[prost(int32, tag="2")]
     pub y: i32,
 }
 /// MouseKeyDown message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoMouseKeyDown {
-    /// Fixed value "MouseKeyDown"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub key: i32,
 }
 /// MouseKeyUp message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoMouseKeyUp {
-    /// Fixed value "MouseKeyUp"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub key: i32,
 }
 // Keyboard messages 
 
 /// KeyDown message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoKeyDown {
-    /// Fixed value "KeyDown"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub key: i32,
 }
 /// KeyUp message
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct ProtoKeyUp {
-    /// Fixed value "KeyUp"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    #[prost(int32, tag="2")]
+    #[prost(int32, tag="1")]
     pub key: i32,
 }
 // Controller messages 
@@ -102,108 +81,37 @@ pub struct ProtoKeyUp {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ProtoControllerAttach {
-    /// Fixed value "ControllerAttach"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
     /// One of the following enums: "ps", "xbox" or "switch"
-    #[prost(string, tag="2")]
+    #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="3")]
-    pub slot: i32,
+    /// Session specific slot number (0-3)
+    #[prost(int32, tag="2")]
+    pub session_slot: i32,
+    /// Session ID of the client
+    #[prost(string, tag="3")]
+    pub session_id: ::prost::alloc::string::String,
 }
 /// ControllerDetach message
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ProtoControllerDetach {
-    /// Fixed value "ControllerDetach"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
-}
-/// ControllerButton message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoControllerButton {
-    /// Fixed value "ControllerButtons"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
-    /// Button code (linux input event code)
-    #[prost(int32, tag="3")]
-    pub button: i32,
-    /// true if pressed, false if released
-    #[prost(bool, tag="4")]
-    pub pressed: bool,
-}
-/// ControllerTriggers message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoControllerTrigger {
-    /// Fixed value "ControllerTriggers"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
-    /// Trigger number (0 for left, 1 for right)
-    #[prost(int32, tag="3")]
-    pub trigger: i32,
-    /// trigger value (-32768 to 32767)
-    #[prost(int32, tag="4")]
-    pub value: i32,
-}
-/// ControllerSticks message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoControllerStick {
-    /// Fixed value "ControllerStick"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
-    /// Stick number (0 for left, 1 for right)
-    #[prost(int32, tag="3")]
-    pub stick: i32,
-    /// X axis value (-32768 to 32767)
-    #[prost(int32, tag="4")]
-    pub x: i32,
-    /// Y axis value (-32768 to 32767)
-    #[prost(int32, tag="5")]
-    pub y: i32,
-}
-/// ControllerAxis message
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoControllerAxis {
-    /// Fixed value "ControllerAxis"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
-    /// Axis number (0 for d-pad horizontal, 1 for d-pad vertical)
-    #[prost(int32, tag="3")]
-    pub axis: i32,
-    /// axis value (-1 to 1)
-    #[prost(int32, tag="4")]
-    pub value: i32,
+    /// Session specific slot number (0-3)
+    #[prost(int32, tag="1")]
+    pub session_slot: i32,
+    /// Session ID of the client
+    #[prost(string, tag="2")]
+    pub session_id: ::prost::alloc::string::String,
 }
 /// ControllerRumble message
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ProtoControllerRumble {
-    /// Fixed value "ControllerRumble"
-    #[prost(string, tag="1")]
-    pub r#type: ::prost::alloc::string::String,
-    /// Slot number (0-3)
-    #[prost(int32, tag="2")]
-    pub slot: i32,
+    /// Session specific slot number (0-3)
+    #[prost(int32, tag="1")]
+    pub session_slot: i32,
+    /// Session ID of the client
+    #[prost(string, tag="2")]
+    pub session_id: ::prost::alloc::string::String,
     /// Low frequency rumble (0-65535)
     #[prost(int32, tag="3")]
     pub low_frequency: i32,
@@ -214,47 +122,153 @@ pub struct ProtoControllerRumble {
     #[prost(int32, tag="5")]
     pub duration: i32,
 }
-/// Union of all Input types
+/// ControllerStateBatch - single message containing full or partial controller state
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoInput {
-    #[prost(oneof="proto_input::InputType", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14")]
-    pub input_type: ::core::option::Option<proto_input::InputType>,
+pub struct ProtoControllerStateBatch {
+    /// Session specific slot number (0-3)
+    #[prost(int32, tag="1")]
+    pub session_slot: i32,
+    /// Session ID of the client
+    #[prost(string, tag="2")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(enumeration="proto_controller_state_batch::UpdateType", tag="3")]
+    pub update_type: i32,
+    /// Sequence number for packet loss detection
+    #[prost(uint32, tag="4")]
+    pub sequence: u32,
+    /// Button state map (Linux event codes)
+    #[prost(map="int32, bool", tag="5")]
+    pub button_changed_mask: ::std::collections::HashMap<i32, bool>,
+    /// Analog inputs
+    ///
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="6")]
+    pub left_stick_x: ::core::option::Option<i32>,
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="7")]
+    pub left_stick_y: ::core::option::Option<i32>,
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="8")]
+    pub right_stick_x: ::core::option::Option<i32>,
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="9")]
+    pub right_stick_y: ::core::option::Option<i32>,
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="10")]
+    pub left_trigger: ::core::option::Option<i32>,
+    /// -32768 to 32767
+    #[prost(int32, optional, tag="11")]
+    pub right_trigger: ::core::option::Option<i32>,
+    /// -1, 0, or 1
+    #[prost(int32, optional, tag="12")]
+    pub dpad_x: ::core::option::Option<i32>,
+    /// -1, 0, or 1
+    #[prost(int32, optional, tag="13")]
+    pub dpad_y: ::core::option::Option<i32>,
+    /// Bitmask indicating which fields have changed
+    /// Bit 0: button_changed_mask, Bit 1: left_stick_x, Bit 2: left_stick_y, etc.
+    #[prost(uint32, optional, tag="14")]
+    pub changed_fields: ::core::option::Option<u32>,
 }
-/// Nested message and enum types in `ProtoInput`.
-pub mod proto_input {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum InputType {
-        #[prost(message, tag="1")]
-        MouseMove(super::ProtoMouseMove),
-        #[prost(message, tag="2")]
-        MouseMoveAbs(super::ProtoMouseMoveAbs),
-        #[prost(message, tag="3")]
-        MouseWheel(super::ProtoMouseWheel),
-        #[prost(message, tag="4")]
-        MouseKeyDown(super::ProtoMouseKeyDown),
-        #[prost(message, tag="5")]
-        MouseKeyUp(super::ProtoMouseKeyUp),
-        #[prost(message, tag="6")]
-        KeyDown(super::ProtoKeyDown),
-        #[prost(message, tag="7")]
-        KeyUp(super::ProtoKeyUp),
-        #[prost(message, tag="8")]
-        ControllerAttach(super::ProtoControllerAttach),
-        #[prost(message, tag="9")]
-        ControllerDetach(super::ProtoControllerDetach),
-        #[prost(message, tag="10")]
-        ControllerButton(super::ProtoControllerButton),
-        #[prost(message, tag="11")]
-        ControllerTrigger(super::ProtoControllerTrigger),
-        #[prost(message, tag="12")]
-        ControllerStick(super::ProtoControllerStick),
-        #[prost(message, tag="13")]
-        ControllerAxis(super::ProtoControllerAxis),
-        #[prost(message, tag="14")]
-        ControllerRumble(super::ProtoControllerRumble),
+/// Nested message and enum types in `ProtoControllerStateBatch`.
+pub mod proto_controller_state_batch {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum UpdateType {
+        /// Complete controller state
+        FullState = 0,
+        /// Only changed fields
+        Delta = 1,
     }
+    impl UpdateType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                UpdateType::FullState => "FULL_STATE",
+                UpdateType::Delta => "DELTA",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "FULL_STATE" => Some(Self::FullState),
+                "DELTA" => Some(Self::Delta),
+                _ => None,
+            }
+        }
+    }
+}
+// WebRTC + signaling 
+
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RtcIceCandidateInit {
+    #[prost(string, tag="1")]
+    pub candidate: ::prost::alloc::string::String,
+    #[prost(uint32, optional, tag="2")]
+    pub sdp_m_line_index: ::core::option::Option<u32>,
+    #[prost(string, optional, tag="3")]
+    pub sdp_mid: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
+    pub username_fragment: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RtcSessionDescriptionInit {
+    #[prost(string, tag="1")]
+    pub sdp: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub r#type: ::prost::alloc::string::String,
+}
+/// ProtoICE message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoIce {
+    #[prost(message, optional, tag="1")]
+    pub candidate: ::core::option::Option<RtcIceCandidateInit>,
+}
+/// ProtoSDP message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoSdp {
+    #[prost(message, optional, tag="1")]
+    pub sdp: ::core::option::Option<RtcSessionDescriptionInit>,
+}
+/// ProtoRaw message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoRaw {
+    #[prost(string, tag="1")]
+    pub data: ::prost::alloc::string::String,
+}
+/// ProtoClientRequestRoomStream message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoClientRequestRoomStream {
+    #[prost(string, tag="1")]
+    pub room_name: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub session_id: ::prost::alloc::string::String,
+}
+/// ProtoClientDisconnected message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoClientDisconnected {
+    #[prost(string, tag="1")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(int32, repeated, tag="2")]
+    pub controller_slots: ::prost::alloc::vec::Vec<i32>,
+}
+/// ProtoServerPushStream message
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ProtoServerPushStream {
+    #[prost(string, tag="1")]
+    pub room_name: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -266,10 +280,54 @@ pub struct ProtoMessageBase {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ProtoMessageInput {
+pub struct ProtoMessage {
     #[prost(message, optional, tag="1")]
     pub message_base: ::core::option::Option<ProtoMessageBase>,
-    #[prost(message, optional, tag="2")]
-    pub data: ::core::option::Option<ProtoInput>,
+    #[prost(oneof="proto_message::Payload", tags="2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25")]
+    pub payload: ::core::option::Option<proto_message::Payload>,
+}
+/// Nested message and enum types in `ProtoMessage`.
+pub mod proto_message {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Payload {
+        /// Input types
+        #[prost(message, tag="2")]
+        MouseMove(super::ProtoMouseMove),
+        #[prost(message, tag="3")]
+        MouseMoveAbs(super::ProtoMouseMoveAbs),
+        #[prost(message, tag="4")]
+        MouseWheel(super::ProtoMouseWheel),
+        #[prost(message, tag="5")]
+        MouseKeyDown(super::ProtoMouseKeyDown),
+        #[prost(message, tag="6")]
+        MouseKeyUp(super::ProtoMouseKeyUp),
+        #[prost(message, tag="7")]
+        KeyDown(super::ProtoKeyDown),
+        #[prost(message, tag="8")]
+        KeyUp(super::ProtoKeyUp),
+        /// Controller input types
+        #[prost(message, tag="9")]
+        ControllerAttach(super::ProtoControllerAttach),
+        #[prost(message, tag="10")]
+        ControllerDetach(super::ProtoControllerDetach),
+        #[prost(message, tag="11")]
+        ControllerRumble(super::ProtoControllerRumble),
+        #[prost(message, tag="12")]
+        ControllerStateBatch(super::ProtoControllerStateBatch),
+        /// Signaling types
+        #[prost(message, tag="20")]
+        Ice(super::ProtoIce),
+        #[prost(message, tag="21")]
+        Sdp(super::ProtoSdp),
+        #[prost(message, tag="22")]
+        Raw(super::ProtoRaw),
+        #[prost(message, tag="23")]
+        ClientRequestRoomStream(super::ProtoClientRequestRoomStream),
+        #[prost(message, tag="24")]
+        ClientDisconnected(super::ProtoClientDisconnected),
+        #[prost(message, tag="25")]
+        ServerPushStream(super::ProtoServerPushStream),
+    }
 }
 // @@protoc_insertion_point(module)

@@ -8,124 +8,142 @@ package proto;
 
 // MouseMove message
 message ProtoMouseMove {
-  string type = 1; // Fixed value "MouseMove"
-  int32 x = 2;
-  int32 y = 3;
+  int32 x = 1;
+  int32 y = 2;
 }
 
 // MouseMoveAbs message
 message ProtoMouseMoveAbs {
-  string type = 1; // Fixed value "MouseMoveAbs"
-  int32 x = 2;
-  int32 y = 3;
+  int32 x = 1;
+  int32 y = 2;
 }
 
 // MouseWheel message
 message ProtoMouseWheel {
-  string type = 1; // Fixed value "MouseWheel"
-  int32 x = 2;
-  int32 y = 3;
+  int32 x = 1;
+  int32 y = 2;
 }
 
 // MouseKeyDown message
 message ProtoMouseKeyDown {
-  string type = 1; // Fixed value "MouseKeyDown"
-  int32 key = 2;
+  int32 key = 1;
 }
 
 // MouseKeyUp message
 message ProtoMouseKeyUp {
-  string type = 1; // Fixed value "MouseKeyUp"
-  int32 key = 2;
+  int32 key = 1;
 }
 
 /* Keyboard messages */
 
 // KeyDown message
 message ProtoKeyDown {
-  string type = 1; // Fixed value "KeyDown"
-  int32 key = 2;
+  int32 key = 1;
 }
 
 // KeyUp message
 message ProtoKeyUp {
-  string type = 1; // Fixed value "KeyUp"
-  int32 key = 2;
+  int32 key = 1;
 }
 
 /* Controller messages */
 
 // ControllerAttach message
 message ProtoControllerAttach {
-  string type = 1; // Fixed value "ControllerAttach"
-  string id = 2; // One of the following enums: "ps", "xbox" or "switch"
-  int32 slot = 3; // Slot number (0-3)
+  string id = 1; // One of the following enums: "ps", "xbox" or "switch"
+  int32 session_slot = 2; // Session specific slot number (0-3)
+  string session_id = 3; // Session ID of the client
 }
 
 // ControllerDetach message
 message ProtoControllerDetach {
-  string type = 1; // Fixed value "ControllerDetach"
-  int32 slot = 2; // Slot number (0-3)
-}
-
-// ControllerButton message
-message ProtoControllerButton {
-  string type = 1; // Fixed value "ControllerButtons"
-  int32 slot = 2; // Slot number (0-3)
-  int32 button = 3; // Button code (linux input event code)
-  bool pressed = 4; // true if pressed, false if released
-}
-
-// ControllerTriggers message
-message ProtoControllerTrigger {
-  string type = 1; // Fixed value "ControllerTriggers"
-  int32 slot = 2; // Slot number (0-3)
-  int32 trigger = 3; // Trigger number (0 for left, 1 for right)
-  int32 value = 4; // trigger value (-32768 to 32767)
-}
-
-// ControllerSticks message
-message ProtoControllerStick {
-  string type = 1; // Fixed value "ControllerStick"
-  int32 slot = 2; // Slot number (0-3)
-  int32 stick = 3; // Stick number (0 for left, 1 for right)
-  int32 x = 4; // X axis value (-32768 to 32767)
-  int32 y = 5; // Y axis value (-32768 to 32767)
-}
-
-// ControllerAxis message
-message ProtoControllerAxis {
-  string type = 1; // Fixed value "ControllerAxis"
-  int32 slot = 2; // Slot number (0-3)
-  int32 axis = 3; // Axis number (0 for d-pad horizontal, 1 for d-pad vertical)
-  int32 value = 4; // axis value (-1 to 1)
+  int32 session_slot = 1; // Session specific slot number (0-3)
+  string session_id = 2; // Session ID of the client
 }
 
 // ControllerRumble message
 message ProtoControllerRumble {
-  string type = 1; // Fixed value "ControllerRumble"
-  int32 slot = 2; // Slot number (0-3)
+  int32 session_slot = 1; // Session specific slot number (0-3)
+  string session_id = 2; // Session ID of the client
   int32 low_frequency = 3; // Low frequency rumble (0-65535)
   int32 high_frequency = 4; // High frequency rumble (0-65535)
   int32 duration = 5; // Duration in milliseconds
 }
 
-// Union of all Input types
-message ProtoInput {
-  oneof input_type {
-    ProtoMouseMove mouse_move = 1;
-    ProtoMouseMoveAbs mouse_move_abs = 2;
-    ProtoMouseWheel mouse_wheel = 3;
-    ProtoMouseKeyDown mouse_key_down = 4;
-    ProtoMouseKeyUp mouse_key_up = 5;
-    ProtoKeyDown key_down = 6;
-    ProtoKeyUp key_up = 7;
-    ProtoControllerAttach controller_attach = 8;
-    ProtoControllerDetach controller_detach = 9;
-    ProtoControllerButton controller_button = 10;
-    ProtoControllerTrigger controller_trigger = 11;
-    ProtoControllerStick controller_stick = 12;
-    ProtoControllerAxis controller_axis = 13;
-    ProtoControllerRumble controller_rumble = 14;
+// ControllerStateBatch - single message containing full or partial controller state
+message ProtoControllerStateBatch {
+  int32 session_slot = 1; // Session specific slot number (0-3)
+  string session_id = 2; // Session ID of the client
+
+  enum UpdateType {
+    FULL_STATE = 0;    // Complete controller state
+    DELTA = 1;         // Only changed fields
   }
+  UpdateType update_type = 3;
+
+  // Sequence number for packet loss detection
+  uint32 sequence = 4;
+
+  // Button state map (Linux event codes)
+  map<int32, bool> button_changed_mask = 5;
+
+  // Analog inputs
+  optional int32 left_stick_x = 6;   // -32768 to 32767
+  optional int32 left_stick_y = 7;   // -32768 to 32767
+  optional int32 right_stick_x = 8;  // -32768 to 32767
+  optional int32 right_stick_y = 9;  // -32768 to 32767
+  optional int32 left_trigger = 10;  // -32768 to 32767
+  optional int32 right_trigger = 11; // -32768 to 32767
+  optional int32 dpad_x = 12;        // -1, 0, or 1
+  optional int32 dpad_y = 13;        // -1, 0, or 1
+
+  // Bitmask indicating which fields have changed
+  // Bit 0: button_changed_mask, Bit 1: left_stick_x, Bit 2: left_stick_y, etc.
+  optional uint32 changed_fields = 14;
+}
+
+/* WebRTC + signaling */
+
+message RTCIceCandidateInit {
+  string candidate = 1;
+  optional uint32 sdpMLineIndex = 2;
+  optional string sdpMid = 3;
+  optional string usernameFragment = 4;
+}
+
+message RTCSessionDescriptionInit {
+  string sdp = 1;
+  string type = 2;
+}
+
+// ProtoICE message
+message ProtoICE {
+  RTCIceCandidateInit candidate = 1;
+}
+
+// ProtoSDP message
+message ProtoSDP {
+  RTCSessionDescriptionInit sdp = 1;
+}
+
+// ProtoRaw message
+message ProtoRaw {
+  string data = 1;
+}
+
+// ProtoClientRequestRoomStream message
+message ProtoClientRequestRoomStream {
+  string room_name = 1;
+  string session_id = 2;
+}
+
+// ProtoClientDisconnected message
+message ProtoClientDisconnected {
+  string session_id = 1;
+  repeated int32 controller_slots = 2;
+}
+
+// ProtoServerPushStream message
+message ProtoServerPushStream {
+  string room_name = 1;
 }
