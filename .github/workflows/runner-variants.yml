@@ -1,6 +1,7 @@
 name: Build Nestri runner image variants
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: 7 0 * * 1,3,6  # Nightlies
   push:

@@ -7,11 +7,6 @@ env:
   IMAGE_NAME: nestrilabs/nestri
   BASE_IMAGE: docker.io/cachyos/cachyos:latest
 
-# This makes our release ci quit prematurely
-# concurrency:
-#     group: ci-${{ github.ref }}
-#     cancel-in-progress: true
-
 jobs:
   build-and-push-bases:
     name: Build and push images
