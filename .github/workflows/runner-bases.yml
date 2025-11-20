@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         variant:
-          - { suffix: "", base: "docker.io/cachyos/cachyos:latest" }
+          - { suffix: "v2", base: "docker.io/cachyos/cachyos:latest" }
           - { suffix: "v3", base: "docker.io/cachyos/cachyos-v3:latest" }
           #- { suffix: "v4", base: "docker.io/cachyos/cachyos-v4:latest" } # Disabled until GHA has this
     steps:
