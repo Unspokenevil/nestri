@@ -15,7 +15,7 @@ ENV CARGO_HOME=/usr/local/cargo \
 
 # Install build essentials and caching tools
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm rustup git base-devel mold \
+    pacman -S --noconfirm rustup git base-devel mold \
     meson pkgconf cmake git gcc make
 
 # Override various linker with symlink so mold is forcefully used (ld, ld.lld, lld)
@@ -28,7 +28,7 @@ RUN rustup default stable
 
 # Install cargo-chef with proper caching
 RUN --mount=type=cache,target=${CARGO_HOME}/registry \
-    cargo install -j $(nproc) cargo-chef --locked
+    cargo install cargo-chef --locked
 
 #*******************************#
 # vimputti manager build stages #
@@ -38,7 +38,7 @@ WORKDIR /builder
 
 # Install build dependencies
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm lib32-gcc-libs
+    pacman -S --noconfirm lib32-gcc-libs
 
 # Clone repository
 RUN git clone --depth 1 --rev "2fde5376b6b9a38cdbd94ccc6a80c9d29a81a417" https://github.com/DatCaptainHorse/vimputti.git
@@ -83,7 +83,7 @@ WORKDIR /builder
 
 # Install build dependencies
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm gst-plugins-good gst-plugin-rswebrtc
+    pacman -S --noconfirm gst-plugins-good gst-plugin-rswebrtc
 
 #--------------------------------------------------------------------
 FROM nestri-server-deps AS nestri-server-planner
@@ -123,14 +123,14 @@ WORKDIR /builder
 
 # Install build dependencies
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm libxkbcommon wayland \
+    pacman -S --noconfirm libxkbcommon wayland \
     gst-plugins-good gst-plugins-bad libinput
 
 RUN --mount=type=cache,target=${CARGO_HOME}/registry \
     cargo install cargo-c
 
 # Clone repository
-RUN git clone --depth 1 --rev "a4abcfe2cffe2d33b564d1308b58504a5e3012b1" https://github.com/games-on-whales/gst-wayland-display.git
+RUN git clone --depth 1 --rev "e4c70b64dad3cd8bbf5eec011f419386adf737ee" https://github.com/games-on-whales/gst-wayland-display.git
 
 #--------------------------------------------------------------------
 FROM gst-wayland-deps AS gst-wayland-planner
@@ -148,7 +148,7 @@ COPY --from=gst-wayland-planner /builder/gst-wayland-display/recipe.json .
 
 # Cache dependencies using cargo-chef
 RUN --mount=type=cache,target=${CARGO_HOME}/registry \
-    cargo chef cook --release --recipe-path recipe.json
+    cargo chef cook --release --recipe-path recipe.json --features cuda
 
 
 ENV CARGO_TARGET_DIR=/builder/target
@@ -158,7 +158,7 @@ COPY --from=gst-wayland-planner /builder/gst-wayland-display/ .
 # Build and install directly to artifacts
 RUN --mount=type=cache,target=${CARGO_HOME}/registry \
     --mount=type=cache,target=/builder/target \
-    cargo cinstall --prefix=${ARTIFACTS} --release
+    cargo cinstall --prefix=${ARTIFACTS} --release --features cuda
 
 #*********************************#
 # Patched bubblewrap build stages #
@@ -168,7 +168,7 @@ WORKDIR /builder
 
 # Install build dependencies
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm libtool libcap libselinux
+    pacman -S --noconfirm libtool libcap libselinux
 
 # Copy patch file from host
 COPY packages/patches/bubblewrap/ /builder/patches/
