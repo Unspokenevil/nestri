@@ -53,7 +53,7 @@ func InitWebRTCAPI() error {
 
 	nat11IP := GetFlags().NAT11IP
 	if len(nat11IP) > 0 {
-		settingEngine.SetNAT1To1IPs([]string{nat11IP}, webrtc.ICECandidateTypeSrflx)
+		settingEngine.SetNAT1To1IPs([]string{nat11IP}, webrtc.ICECandidateTypeHost)
 		slog.Info("Using NAT 1:1 IP for WebRTC", "nat11_ip", nat11IP)
 	}
 
