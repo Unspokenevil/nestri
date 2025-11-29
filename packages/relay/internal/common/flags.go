@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/pion/webrtc/v4"
 )
@@ -125,6 +126,12 @@ func getLocalIP() string {
 		return ""
 	}
 	for _, address := range addrs {
+		// Skip IPs starting with 10 or below, as might be private or internal network
+		for i := 0; i < 11; i++ {
+			if strings.HasPrefix(address.String(), strconv.Itoa(i)) {
+				continue
+			}
+		}
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil || ipnet.IP != nil {
 				return ipnet.IP.String()
