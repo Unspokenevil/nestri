@@ -130,7 +130,7 @@ RUN --mount=type=cache,target=${CARGO_HOME}/registry \
     cargo install cargo-c
 
 # Clone repository
-RUN git clone --depth 1 --rev "e4c70b64dad3cd8bbf5eec011f419386adf737ee" https://github.com/games-on-whales/gst-wayland-display.git
+RUN git clone --depth 1 --rev "67b1183997fd7aaf57398e4b01bd64c4d2433c45" https://github.com/games-on-whales/gst-wayland-display.git
 
 #--------------------------------------------------------------------
 FROM gst-wayland-deps AS gst-wayland-planner

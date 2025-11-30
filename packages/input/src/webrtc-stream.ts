@@ -13,9 +13,10 @@ import {
   ProtoClientRequestRoomStream,
   ProtoClientRequestRoomStreamSchema,
   ProtoICE,
-  ProtoICESchema, ProtoRaw,
+  ProtoICESchema,
+  ProtoRaw,
   ProtoSDP,
-  ProtoSDPSchema
+  ProtoSDPSchema,
 } from "./proto/types_pb";
 import { P2PMessageStream } from "./streamwrapper";
 
@@ -38,7 +39,6 @@ export class WebRTCStream {
   private _roomName: string | undefined = undefined;
   private _isConnected: boolean = false;
   private _dataChannelCallbacks: Array<(data: any) => void> = [];
-  currentFrameRate: number = 100;
 
   constructor(
     serverURL: string,
@@ -126,11 +126,19 @@ export class WebRTCStream {
           }
         });
 
-        this._msgStream.on("session-assigned", (data: ProtoClientRequestRoomStream) => {
-          this._sessionId = data.sessionId;
-          localStorage.setItem("nestri-session-id", this._sessionId);
-          console.log("Session ID assigned:", this._sessionId, "for room:", data.roomName);
-        });
+        this._msgStream.on(
+          "session-assigned",
+          (data: ProtoClientRequestRoomStream) => {
+            this._sessionId = data.sessionId;
+            localStorage.setItem("nestri-session-id", this._sessionId);
+            console.log(
+              "Session ID assigned:",
+              this._sessionId,
+              "for room:",
+              data.roomName,
+            );
+          },
+        );
 
         this._msgStream.on("offer", async (data: ProtoSDP) => {
           if (!this._pc) {
@@ -293,26 +301,8 @@ export class WebRTCStream {
           this._onConnected(
             new MediaStream([this._audioTrack, this._videoTrack]),
           );
-
-          // Continuously set low-latency target
-          this._pc.getReceivers().forEach((receiver: RTCRtpReceiver) => {
-            let intervalLoop = setInterval(async () => {
-              if (
-                receiver.track.readyState !== "live" ||
-                (receiver.transport && receiver.transport.state !== "connected")
-              ) {
-                clearInterval(intervalLoop);
-                return;
-              } else {
-                // @ts-ignore
-                receiver.jitterBufferTarget = receiver.jitterBufferDelayHint = receiver.playoutDelayHint = 0;
-              }
-            }, 50);
-          });
         }
       }
-
-      this._gatherFrameRate();
     } else if (
       this._pc.connectionState === "failed" ||
       this._pc.connectionState === "closed" ||
@@ -412,11 +402,16 @@ export class WebRTCStream {
     };
   }
 
-  private _gatherFrameRate() {
-    if (this._pc === undefined || this._videoTrack === undefined) return;
+  private async _gatherStats(): Promise<any> {
+    if (
+      this._pc === undefined ||
+      this._videoTrack === undefined ||
+      !this._isConnected
+    )
+      return null;
 
-    const videoInfoPromise = new Promise<{ fps: number }>((resolve) => {
-      // Keep trying to get fps until it's found
+    return new Promise<any>((resolve) => {
+      // Keep trying to get stats until gotten
       const interval = setInterval(async () => {
         if (this._pc === undefined) {
           clearInterval(interval);
@@ -428,14 +423,10 @@ export class WebRTCStream {
           if (report.type === "inbound-rtp") {
             clearInterval(interval);
 
-            resolve({ fps: report.framesPerSecond });
+            resolve({ pli: report.pliCount, nack: report.nackCount });
           }
         });
       }, 250);
-    });
-
-    videoInfoPromise.then((value) => {
-      this.currentFrameRate = value.fps;
     });
   }
 

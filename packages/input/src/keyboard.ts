@@ -36,10 +36,8 @@ export class Keyboard {
     if (this.connected) this.stop();
 
     this.connected = true;
-    document.addEventListener("keydown", this.keydownListener, {
-      passive: false,
-    });
-    document.addEventListener("keyup", this.keyupListener, { passive: false });
+    document.addEventListener("keydown", this.keydownListener);
+    document.addEventListener("keyup", this.keyupListener);
   }
 
   private stop() {
@@ -73,6 +71,6 @@ export class Keyboard {
   private keyToVirtualKeyCode(code: string) {
     // Treat Home key as Escape - TODO: Make user-configurable
     if (code === "Home") return 1;
-    return keyCodeToLinuxEventCode[code] || undefined;
+    return keyCodeToLinuxEventCode[code] || 0;
   }
 }

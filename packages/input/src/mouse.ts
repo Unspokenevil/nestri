@@ -35,8 +35,6 @@ export class Mouse {
     this.wrtc = webrtc;
     this.canvas = canvas;
 
-    this.sendInterval = 1000 / webrtc.currentFrameRate;
-
     this.mousemoveListener = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
@@ -77,18 +75,10 @@ export class Mouse {
 
     if (document.pointerLockElement == this.canvas) {
       this.connected = true;
-      this.canvas.addEventListener("mousemove", this.mousemoveListener, {
-        passive: false,
-      });
-      this.canvas.addEventListener("mousedown", this.mousedownListener, {
-        passive: false,
-      });
-      this.canvas.addEventListener("mouseup", this.mouseupListener, {
-        passive: false,
-      });
-      this.canvas.addEventListener("wheel", this.mousewheelListener, {
-        passive: false,
-      });
+      this.canvas.addEventListener("mousemove", this.mousemoveListener);
+      this.canvas.addEventListener("mousedown", this.mousedownListener);
+      this.canvas.addEventListener("mouseup", this.mouseupListener);
+      this.canvas.addEventListener("wheel", this.mousewheelListener);
     } else {
       if (this.connected) {
         this.stop();
@@ -106,7 +96,7 @@ export class Mouse {
 
   private startProcessing() {
     setInterval(() => {
-      if (this.connected && (this.movementX !== 0 || this.movementY !== 0)) {
+      if (this.connected) {
         this.sendAggregatedMouseMove();
         this.movementX = 0;
         this.movementY = 0;

@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     pacman -S --needed --noconfirm \
         vulkan-intel lib32-vulkan-intel vpl-gpu-rt \
         vulkan-radeon lib32-vulkan-radeon \
-        mesa lib32-mesa \
+        mesa lib32-mesa vulkan-mesa-layers lib32-vulkan-mesa-layers \
         gtk3 lib32-gtk3 \
         sudo xorg-xwayland seatd libinput gamescope mangohud wlr-randr \
         pipewire pipewire-pulse pipewire-alsa wireplumber \
@@ -68,9 +68,7 @@ COPY packages/configs/wireplumber.conf.d/* /etc/wireplumber/wireplumber.conf.d/
 COPY packages/configs/pipewire.conf.d/* /etc/pipewire/pipewire.conf.d/
 
 ## MangoHud Config ##
-RUN mkdir -p "${NESTRI_HOME}/.config/MangoHud"
-
-COPY packages/configs/MangoHud/MangoHud.conf "${NESTRI_HOME}/.config/MangoHud/"
+COPY packages/configs/MangoHud/MangoHud.conf /etc/nestri/configs/MangoHud/
 
 ### Artifacts from Builder ###
 COPY --from=builder /artifacts/bin/nestri-server /usr/bin/

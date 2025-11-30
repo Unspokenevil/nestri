@@ -13,4 +13,4 @@ export GST_GL_API=gles2
 export GST_GL_WINDOW=surfaceless
 
 # Gamescope does not respect MangoHud default config location
-export MANGOHUD_CONFIGFILE=${NESTRI_HOME}/.config/MangoHud/MangoHud.conf
+export MANGOHUD_CONFIGFILE=/etc/nestri/configs/MangoHud/MangoHud.conf
