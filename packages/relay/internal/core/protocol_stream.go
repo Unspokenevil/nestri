@@ -575,7 +575,7 @@ func (sp *StreamProtocol) handleStreamPush(stream network.Stream) {
 					// Prepare PlayoutDelayExtension so we don't need to recreate it for each packet
 					playoutExt := &rtp.PlayoutDelayExtension{
 						MinDelay: 0,
-						MaxDelay: 50,
+						MaxDelay: 0,
 					}
 					playoutPayload, err := playoutExt.Marshal()
 					if err != nil {
