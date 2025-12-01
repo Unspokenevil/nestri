@@ -12,6 +12,7 @@ on:
       - "containerfiles/playsite.Containerfile"
       - ".github/workflows/play-standalone.yml"
       - "packages/play-standalone/**"
+      - "packages/input/**"
     tags:
       - v*.*.*
   release:
