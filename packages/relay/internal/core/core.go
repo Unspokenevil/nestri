@@ -20,9 +20,9 @@ import (
 	rcmgr "github.com/libp2p/go-libp2p/p2p/host/resource-manager"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	p2pquic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"github.com/libp2p/go-libp2p/p2p/transport/quicreuse"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
-	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/oklog/ulid/v2"
@@ -91,10 +91,10 @@ func NewRelay(ctx context.Context, port int, identityKey crypto.PrivKey) (*Relay
 	listenAddrs := []string{
 		fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", port),                      // IPv4 - Raw TCP
 		fmt.Sprintf("/ip6/::/tcp/%d", port),                           // IPv6 - Raw TCP
-		fmt.Sprintf("/ip4/0.0.0.0/tcp/%d/ws", port),                   // IPv4 - TCP WebSocket
-		fmt.Sprintf("/ip6/::/tcp/%d/ws", port),                        // IPv6 - TCP WebSocket
 		fmt.Sprintf("/ip4/0.0.0.0/udp/%d/quic-v1/webtransport", port), // IPv4 - UDP QUIC WebTransport
 		fmt.Sprintf("/ip6/::/udp/%d/quic-v1/webtransport", port),      // IPv6 - UDP QUIC WebTransport
+		fmt.Sprintf("/ip4/0.0.0.0/udp/%d/quic-v1", port),              // IPv4 - UDP Raw QUIC
+		fmt.Sprintf("/ip6/::/udp/%d/quic-v1", port),                   // IPv6 - UDP Raw QUIC
 	}
 
 	var muAddrs []multiaddr.Multiaddr
@@ -112,8 +112,8 @@ func NewRelay(ctx context.Context, port int, identityKey crypto.PrivKey) (*Relay
 		libp2p.Identity(identityKey),
 		// Enable required transports
 		libp2p.Transport(tcp.NewTCPTransport),
-		libp2p.Transport(ws.New),
 		libp2p.Transport(webtransport.New),
+		libp2p.Transport(p2pquic.NewTransport),
 		// Other options
 		libp2p.ListenAddrs(muAddrs...),
 		libp2p.Security(noise.ID, noise.New),
