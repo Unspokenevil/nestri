@@ -60,6 +60,12 @@ pub enum RateControl {
     CBR(RateControlCBR),
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, ValueEnum)]
+pub enum LatencyControl {
+    LowestLatency,
+    HighestQuality,
+}
+
 pub struct EncodingOptionsBase {
     /// Codec (e.g. "h264", "opus" etc.)
     pub codec: Codec,
@@ -67,6 +73,8 @@ pub struct EncodingOptionsBase {
     pub encoder: Option<String>,
     /// Rate control method (e.g. "cqp", "vbr", "cbr")
     pub rate_control: RateControl,
+    /// Latency control option, what to tweak settings towards (latency or quality)
+    pub latency_control: LatencyControl,
 }
 impl EncodingOptionsBase {
     pub fn debug_print(&self) {
@@ -87,6 +95,14 @@ impl EncodingOptionsBase {
                 tracing::info!("-> Target Bitrate: {}", cbr.target_bitrate);
             }
         }
+        match &self.latency_control {
+            LatencyControl::LowestLatency => {
+                tracing::info!("> Latency Control: Priorizing lowest latency");
+            }
+            LatencyControl::HighestQuality => {
+                tracing::info!("> Latency Control: Priorizing quality at the cost of latency");
+            }
+        }
     }
 }
 
@@ -94,6 +110,7 @@ pub struct VideoEncodingOptions {
     pub base: EncodingOptionsBase,
     pub encoder_type: EncoderType,
     pub bit_depth: u32,
+    pub keyframe_dist_secs: u32,
 }
 impl VideoEncodingOptions {
     pub fn from_matches(matches: &clap::ArgMatches) -> Self {
@@ -125,6 +142,10 @@ impl VideoEncodingOptions {
                         max_bitrate: matches.get_one::<u32>("video-bitrate-max").unwrap().clone(),
                     }),
                 },
+                latency_control: matches
+                    .get_one::<LatencyControl>("video-latency-control")
+                    .unwrap_or(&LatencyControl::LowestLatency)
+                    .clone(),
             },
             encoder_type: matches
                 .get_one::<EncoderType>("video-encoder-type")
@@ -134,6 +155,10 @@ impl VideoEncodingOptions {
                 .get_one::<u32>("video-bit-depth")
                 .copied()
                 .unwrap_or(8),
+            keyframe_dist_secs: matches
+                .get_one::<u32>("keyframe-dist-secs")
+                .copied()
+                .unwrap_or(1),
         }
     }
 
@@ -142,6 +167,7 @@ impl VideoEncodingOptions {
         self.base.debug_print();
         tracing::info!("> Encoder Type: {}", self.encoder_type.as_str());
         tracing::info!("> Bit Depth: {}", self.bit_depth);
+        tracing::info!("> Keyframe Distance Seconds: {}", self.keyframe_dist_secs);
     }
 }
 impl Deref for VideoEncodingOptions {
@@ -208,6 +234,10 @@ impl AudioEncodingOptions {
                     }),
                     wot => panic!("Invalid rate control method for audio: {}", wot.as_str()),
                 },
+                latency_control: matches
+                    .get_one::<LatencyControl>("audio-latency-control")
+                    .unwrap_or(&LatencyControl::LowestLatency)
+                    .clone(),
             },
             capture_method: matches
                 .get_one::<AudioCaptureMethod>("audio-capture-method")

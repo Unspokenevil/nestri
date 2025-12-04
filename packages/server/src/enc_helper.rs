@@ -74,7 +74,6 @@ pub enum EncoderAPI {
     QSV,
     VAAPI,
     NVENC,
-    AMF,
     SOFTWARE,
     UNKNOWN,
 }
@@ -85,7 +84,6 @@ impl EncoderAPI {
             Self::QSV => "Intel QuickSync Video",
             Self::VAAPI => "Video Acceleration API",
             Self::NVENC => "NVIDIA NVENC",
-            Self::AMF => "AMD Media Framework",
             Self::SOFTWARE => "Software",
             Self::UNKNOWN => "Unknown",
         }
@@ -167,8 +165,6 @@ fn get_encoder_api(encoder: &str, encoder_type: &EncoderType) -> EncoderAPI {
                 EncoderAPI::VAAPI
             } else if encoder.starts_with("nv") {
                 EncoderAPI::NVENC
-            } else if encoder.starts_with("amf") {
-                EncoderAPI::AMF
             } else {
                 EncoderAPI::UNKNOWN
             }
@@ -275,9 +271,9 @@ pub fn encoder_low_latency_params(
     encoder: &VideoEncoderInfo,
     _rate_control: &RateControl,
     framerate: u32,
+    keyframe_dist_secs: u32,
 ) -> VideoEncoderInfo {
-    // 1 second keyframe interval for fast recovery, is this too taxing?
-    let mut encoder_optz = encoder_gop_params(encoder, framerate);
+    let mut encoder_optz = encoder_gop_params(encoder, framerate * keyframe_dist_secs);
 
     match encoder_optz.encoder_api {
         EncoderAPI::QSV => {
@@ -292,16 +288,6 @@ pub fn encoder_low_latency_params(
             encoder_optz.set_parameter("preset", "p1");
             encoder_optz.set_parameter("tune", "ultra-low-latency");
             encoder_optz.set_parameter("zerolatency", "true");
-        }
-        EncoderAPI::AMF => {
-            encoder_optz.set_parameter("preset", "speed");
-            let usage = match encoder_optz.codec {
-                VideoCodec::H264 | VideoCodec::H265 => "ultra-low-latency",
-                VideoCodec::AV1 => "low-latency",
-            };
-            if !usage.is_empty() {
-                encoder_optz.set_parameter("usage", usage);
-            }
         }
         EncoderAPI::SOFTWARE => match encoder_optz.name.as_str() {
             "openh264enc" => {
@@ -321,6 +307,56 @@ pub fn encoder_low_latency_params(
                 encoder_optz.set_parameter("usage-profile", "realtime");
                 encoder_optz.set_parameter("cpu-used", "10");
                 encoder_optz.set_parameter("lag-in-frames", "0");
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+
+    encoder_optz
+}
+
+pub fn encoder_high_quality_params(
+    encoder: &VideoEncoderInfo,
+    _rate_control: &RateControl,
+    framerate: u32,
+    keyframe_dist_secs: u32,
+) -> VideoEncoderInfo {
+    let mut encoder_optz = encoder_gop_params(encoder, framerate * keyframe_dist_secs);
+
+    match encoder_optz.encoder_api {
+        EncoderAPI::QSV => {
+            encoder_optz.set_parameter("low-latency", "false");
+            encoder_optz.set_parameter("target-usage", "1");
+        }
+        EncoderAPI::VAAPI => {
+            encoder_optz.set_parameter("target-usage", "1");
+        }
+        EncoderAPI::NVENC => {
+            encoder_optz.set_parameter("multi-pass", "two-pass");
+            encoder_optz.set_parameter("preset", "p7");
+            encoder_optz.set_parameter("tune", "high-quality");
+            encoder_optz.set_parameter("zerolatency", "false");
+            encoder_optz.set_parameter("spatial-aq", "true");
+            encoder_optz.set_parameter("rc-lookahead", "3");
+        }
+        EncoderAPI::SOFTWARE => match encoder_optz.name.as_str() {
+            "openh264enc" => {
+                encoder_optz.set_parameter("complexity", "high");
+                encoder_optz.set_parameter("usage-type", "screen");
+            }
+            "x264enc" => {
+                encoder_optz.set_parameter("rc-lookahead", "3");
+                encoder_optz.set_parameter("speed-preset", "medium");
+            }
+            "svtav1enc" => {
+                encoder_optz.set_parameter("preset", "8");
+                encoder_optz.set_parameter("parameters-string", "lookahead=3");
+            }
+            "av1enc" => {
+                encoder_optz.set_parameter("usage-profile", "realtime");
+                encoder_optz.set_parameter("cpu-used", "8");
+                encoder_optz.set_parameter("lag-in-frames", "3");
             }
             _ => {}
         },
@@ -426,16 +462,6 @@ pub fn get_compatible_encoders(gpus: &Vec<GPUInfo>) -> Vec<VideoEncoderInfo> {
                             } else {
                                 None
                             }
-                        }
-                        EncoderAPI::AMF if element.has_property("device") => {
-                            let device_id = match element.property_value("device").get::<u32>() {
-                                Ok(v) => Some(v as usize),
-                                Err(_) => None,
-                            };
-
-                            device_id.and_then(|id| {
-                                get_gpus_by_vendor(&gpus, GPUVendor::AMD).get(id).cloned()
-                            })
                         }
                         _ => None,
                     }
@@ -549,7 +575,6 @@ pub fn get_best_compatible_encoder(
         score += match encoder.encoder_api {
             EncoderAPI::NVENC => 3,
             EncoderAPI::QSV => 3,
-            EncoderAPI::AMF => 3,
             EncoderAPI::VAAPI => 2,
             EncoderAPI::SOFTWARE => 1,
             EncoderAPI::UNKNOWN => 0,

@@ -108,7 +108,7 @@ start_compositor() {
 
     # Set default compositor if unset
     if [[ -z "${NESTRI_LAUNCH_COMPOSITOR+x}" ]]; then
-        NESTRI_LAUNCH_COMPOSITOR="gamescope --backend wayland --force-grab-cursor -g -f --rt -W ${WIDTH} -H ${HEIGHT} -r ${FRAMERATE:-60}"
+        NESTRI_LAUNCH_COMPOSITOR="gamescope --backend wayland -g -f --rt -W ${WIDTH} -H ${HEIGHT} -r ${FRAMERATE:-60}"
     fi
 
     # If PRELOAD_SHIM_arch's are set and exist, set LD_PRELOAD for 32/64-bit apps

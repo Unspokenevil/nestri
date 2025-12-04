@@ -21,8 +21,6 @@ var participantPacketPool = sync.Pool{
 type participantPacket struct {
 	kind         webrtc.RTPCodecType
 	packet       *rtp.Packet
-	timeDiff     int64
-	sequenceDiff int
 }
 
 type RoomInfo struct {
@@ -141,7 +139,7 @@ func (r *Room) IsOnline() bool {
 	return r.PeerConnection != nil
 }
 
-func (r *Room) BroadcastPacketRetimed(kind webrtc.RTPCodecType, pkt *rtp.Packet, timeDiff int64, sequenceDiff int) {
+func (r *Room) BroadcastPacket(kind webrtc.RTPCodecType, pkt *rtp.Packet) {
 	// Lock-free load of channel slice
 	channels := r.participantChannels.Load()
 
@@ -155,9 +153,7 @@ func (r *Room) BroadcastPacketRetimed(kind webrtc.RTPCodecType, pkt *rtp.Packet,
 		// Get packet struct from pool
 		pp := participantPacketPool.Get().(*participantPacket)
 		pp.kind = kind
-		pp.packet = pkt.Clone()
-		pp.timeDiff = timeDiff
-		pp.sequenceDiff = sequenceDiff
+		pp.packet = pkt
 
 		select {
 		case ch <- pp:

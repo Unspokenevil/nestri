@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/pion/interceptor/pkg/nack"
 	"log/slog"
 	"strconv"
 
@@ -30,18 +31,119 @@ func InitWebRTCAPI() error {
 		return fmt.Errorf("failed to register extensions: %w", err)
 	}
 
-	// Default codecs cover our needs
-	err = mediaEngine.RegisterDefaultCodecs()
-	if err != nil {
-		return err
+	// Register codecs
+	for _, codec := range []webrtc.RTPCodecParameters{
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus, ClockRate: 48000, Channels: 2, SDPFmtpLine: "minptime=10;useinbandfec=1"},
+			PayloadType:        111,
+		},
+	} {
+		if err = mediaEngine.RegisterCodec(codec, webrtc.RTPCodecTypeAudio); err != nil {
+			return err
+		}
+	}
+
+	videoRTCPFeedback := []webrtc.RTCPFeedback{{"nack", ""}, {"nack", "pli"}}
+	for _, codec := range []webrtc.RTPCodecParameters{
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 102,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 104,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 106,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 108,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 127,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType:     webrtc.MimeTypeH264,
+				ClockRate:    90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 39,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType:     webrtc.MimeTypeH265,
+				ClockRate:    90000,
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 116,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeAV1, ClockRate: 90000, RTCPFeedback: videoRTCPFeedback},
+			PayloadType:        45,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP9, ClockRate: 90000, SDPFmtpLine: "profile-id=0", RTCPFeedback: videoRTCPFeedback},
+			PayloadType:        98,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP9, ClockRate: 90000, SDPFmtpLine: "profile-id=2", RTCPFeedback: videoRTCPFeedback},
+			PayloadType:        100,
+		},
+		{
+			RTPCodecCapability: webrtc.RTPCodecCapability{
+				MimeType: webrtc.MimeTypeH264, ClockRate: 90000,
+				SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f",
+				RTCPFeedback: videoRTCPFeedback,
+			},
+			PayloadType: 112,
+		},
+	} {
+		if err = mediaEngine.RegisterCodec(codec, webrtc.RTPCodecTypeVideo); err != nil {
+			return err
+		}
 	}
 
 	// Interceptor registry
 	interceptorRegistry := &interceptor.Registry{}
 
-	// Use default set
-	err = webrtc.RegisterDefaultInterceptors(mediaEngine, interceptorRegistry)
+	// Register our interceptors..
+	nackGenFactory, err := nack.NewGeneratorInterceptor()
 	if err != nil {
+		return err
+	}
+	interceptorRegistry.Add(nackGenFactory)
+	nackRespFactory, err := nack.NewResponderInterceptor()
+	if err != nil {
+		return err
+	}
+	interceptorRegistry.Add(nackRespFactory)
+
+	if err = webrtc.ConfigureRTCPReports(interceptorRegistry); err != nil {
 		return err
 	}
 

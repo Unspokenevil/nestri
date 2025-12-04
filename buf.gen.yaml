@@ -15,3 +15,4 @@ plugins:
   # Rust (nestri-server)
   - remote: buf.build/community/neoeinstein-prost
     out: packages/server/src/proto
+    opt: flat_output_dir=true

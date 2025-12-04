@@ -99,9 +99,6 @@ if (envs_map.size > 0) {
   });
   window.addEventListener("gamepaddisconnected", (e) => {
     console.log("Gamepad disconnected:", e.gamepad);
-    if (e.gamepad.id.toLowerCase().includes("nestri"))
-      return;
-
     let disconnected = nestriControllers.find((c) => c.getSlot() === e.gamepad.index);
     if (disconnected) {
       disconnected.dispose();

@@ -106,28 +106,15 @@ func (p *Participant) Close() {
 func (p *Participant) packetWriter() {
 	for pkt := range p.packetQueue {
 		var track *webrtc.TrackLocalStaticRTP
-		var sequenceNumber uint16
-		var timestamp uint32
 
 		// No mutex needed - only this goroutine modifies these
 		if pkt.kind == webrtc.RTPCodecTypeAudio {
 			track = p.AudioTrack
-			p.AudioSequenceNumber = uint16(int(p.AudioSequenceNumber) + pkt.sequenceDiff)
-			p.AudioTimestamp = uint32(int64(p.AudioTimestamp) + pkt.timeDiff)
-			sequenceNumber = p.AudioSequenceNumber
-			timestamp = p.AudioTimestamp
 		} else {
 			track = p.VideoTrack
-			p.VideoSequenceNumber = uint16(int(p.VideoSequenceNumber) + pkt.sequenceDiff)
-			p.VideoTimestamp = uint32(int64(p.VideoTimestamp) + pkt.timeDiff)
-			sequenceNumber = p.VideoSequenceNumber
-			timestamp = p.VideoTimestamp
 		}
 
 		if track != nil {
-			pkt.packet.SequenceNumber = sequenceNumber
-			pkt.packet.Timestamp = timestamp
-
 			if err := track.WriteRTP(pkt.packet); err != nil && !errors.Is(err, io.ErrClosedPipe) {
 				slog.Error("WriteRTP failed", "participant", p.ID, "kind", pkt.kind, "err", err)
 			}

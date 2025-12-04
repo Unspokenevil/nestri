@@ -55,9 +55,8 @@ impl NestriP2P {
                     noise::Config::new,
                     yamux::Config::default,
                 )?
+                .with_quic()
                 .with_dns()?
-                .with_websocket(noise::Config::new, yamux::Config::default)
-                .await?
                 .with_behaviour(|key| NestriBehaviour::new(key.public()))?
                 .build(),
         ));

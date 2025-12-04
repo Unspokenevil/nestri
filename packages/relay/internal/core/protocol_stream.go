@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math"
 	"relay/internal/common"
 	"relay/internal/connections"
 	"relay/internal/shared"
@@ -606,52 +605,8 @@ func (sp *StreamProtocol) handleStreamPush(stream network.Stream) {
 							}
 						}
 
-						// Calculate differences
-						var timeDiff int64
-						var sequenceDiff int
-
-						if remoteTrack.Kind() == webrtc.RTPCodecTypeVideo {
-							timeDiff = int64(rtpPacket.Timestamp) - int64(room.LastVideoTimestamp)
-							if !room.VideoTimestampSet {
-								timeDiff = 0
-								room.VideoTimestampSet = true
-							} else if timeDiff < -(math.MaxUint32 / 10) {
-								timeDiff += math.MaxUint32 + 1
-							}
-
-							sequenceDiff = int(rtpPacket.SequenceNumber) - int(room.LastVideoSequenceNumber)
-							if !room.VideoSequenceSet {
-								sequenceDiff = 0
-								room.VideoSequenceSet = true
-							} else if sequenceDiff < -(math.MaxUint16 / 10) {
-								sequenceDiff += math.MaxUint16 + 1
-							}
-
-							room.LastVideoTimestamp = rtpPacket.Timestamp
-							room.LastVideoSequenceNumber = rtpPacket.SequenceNumber
-						} else { // Audio
-							timeDiff = int64(rtpPacket.Timestamp) - int64(room.LastAudioTimestamp)
-							if !room.AudioTimestampSet {
-								timeDiff = 0
-								room.AudioTimestampSet = true
-							} else if timeDiff < -(math.MaxUint32 / 10) {
-								timeDiff += math.MaxUint32 + 1
-							}
-
-							sequenceDiff = int(rtpPacket.SequenceNumber) - int(room.LastAudioSequenceNumber)
-							if !room.AudioSequenceSet {
-								sequenceDiff = 0
-								room.AudioSequenceSet = true
-							} else if sequenceDiff < -(math.MaxUint16 / 10) {
-								sequenceDiff += math.MaxUint16 + 1
-							}
-
-							room.LastAudioTimestamp = rtpPacket.Timestamp
-							room.LastAudioSequenceNumber = rtpPacket.SequenceNumber
-						}
-
-						// Broadcast with differences
-						room.BroadcastPacketRetimed(remoteTrack.Kind(), rtpPacket, timeDiff, sequenceDiff)
+						// Broadcast
+						room.BroadcastPacket(remoteTrack.Kind(), rtpPacket)
 					}
 
 					slog.Debug("Track closed for room", "room", room.Name, "track_kind", remoteTrack.Kind().String())

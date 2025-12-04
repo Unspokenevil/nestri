@@ -123,6 +123,14 @@ impl Args {
                     .default_value("cbr"),
             )
             .arg(
+                Arg::new("video-latency-control")
+                    .long("video-latency-control")
+                    .env("VIDEO_LATENCY_CONTROL")
+                    .help("Video latency control")
+                    .value_parser(value_parser!(encoding_args::LatencyControl))
+                    .default_value("lowest-latency"),
+            )
+            .arg(
                 Arg::new("video-cqp")
                     .long("video-cqp")
                     .env("VIDEO_CQP")
@@ -166,6 +174,14 @@ impl Args {
                     .default_value("8"),
             )
             .arg(
+                Arg::new("keyframe-dist-secs")
+                    .long("keyframe-dist-secs")
+                    .env("KEYFRAME_DIST_SECS")
+                    .help("Distance between keyframes in seconds")
+                    .value_parser(value_parser!(u32).range(1..))
+                    .default_value("1"),
+            )
+            .arg(
                 Arg::new("audio-capture-method")
                     .long("audio-capture-method")
                     .env("AUDIO_CAPTURE_METHOD")
@@ -194,6 +210,14 @@ impl Args {
                     .help("Rate control method")
                     .value_parser(value_parser!(encoding_args::RateControlMethod))
                     .default_value("cbr"),
+            )
+            .arg(
+                Arg::new("audio-latency-control")
+                    .long("audio-latency-control")
+                    .env("AUDIO_LATENCY_CONTROL")
+                    .help("Audio latency control")
+                    .value_parser(value_parser!(encoding_args::LatencyControl))
+                    .default_value("lowest-latency"),
             )
             .arg(
                 Arg::new("audio-bitrate")

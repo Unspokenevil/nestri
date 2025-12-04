@@ -348,18 +348,8 @@ main() {
         setup_namespaceless
     fi
 
-    # Make sure /run/udev/ directory exists with /run/udev/control, needed for virtual controller support
-    if [[ ! -d "/run/udev" || ! -e "/run/udev/control" ]]; then
-        log "Creating /run/udev directory and control file.."
-        $ENTCMD_PREFIX mkdir -p /run/udev || {
-            log "Error: Failed to create /run/udev directory"
-            exit 1
-        }
-        $ENTCMD_PREFIX touch /run/udev/control || {
-            log "Error: Failed to create /run/udev/control file"
-            exit 1
-        }
-    fi
+    # Wait for vimputti socket before switching to application startup
+    wait_for_socket "/tmp/vimputti-0" "vimputti" || exit 1
 
     # Switch to nestri runner entrypoint
     log "Switching to application startup entrypoint..."

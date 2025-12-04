@@ -8,6 +8,7 @@ mod p2p;
 mod proto;
 
 use crate::args::encoding_args;
+use crate::args::encoding_args::LatencyControl;
 use crate::enc_helper::{EncoderAPI, EncoderType};
 use crate::gpu::{GPUInfo, GPUVendor};
 use crate::input::controller::ControllerManager;
@@ -130,11 +131,20 @@ fn handle_encoder_video_settings(
     args: &args::Args,
     video_encoder: &enc_helper::VideoEncoderInfo,
 ) -> enc_helper::VideoEncoderInfo {
-    let mut optimized_encoder = enc_helper::encoder_low_latency_params(
-        &video_encoder,
-        &args.encoding.video.rate_control,
-        args.app.framerate,
-    );
+    let mut optimized_encoder = match args.encoding.video.latency_control {
+        LatencyControl::LowestLatency => enc_helper::encoder_low_latency_params(
+            &video_encoder,
+            &args.encoding.video.rate_control,
+            args.app.framerate,
+            args.encoding.video.keyframe_dist_secs,
+        ),
+        LatencyControl::HighestQuality => enc_helper::encoder_high_quality_params(
+            &video_encoder,
+            &args.encoding.video.rate_control,
+            args.app.framerate,
+            args.encoding.video.keyframe_dist_secs,
+        ),
+    };
     // Handle rate-control method
     match &args.encoding.video.rate_control {
         encoding_args::RateControl::CQP(cqp) => {
@@ -429,39 +439,34 @@ async fn main() -> Result<(), Box<dyn Error>> {
     webrtcsink.set_property("do-retransmission", false);
 
     /* Queues */
-    let video_queue = gstreamer::ElementFactory::make("queue")
+    // Sink queues
+    let video_sink_queue = gstreamer::ElementFactory::make("queue").build()?;
+    let audio_sink_queue = gstreamer::ElementFactory::make("queue").build()?;
+
+    // Source queues
+    let video_source_queue = gstreamer::ElementFactory::make("queue")
         .property("max-size-buffers", 2u32)
         .property("max-size-time", 0u64)
         .property("max-size-bytes", 0u32)
         .build()?;
-
-    let audio_queue = gstreamer::ElementFactory::make("queue")
+    let audio_source_queue = gstreamer::ElementFactory::make("queue")
         .property("max-size-buffers", 2u32)
         .property("max-size-time", 0u64)
         .property("max-size-bytes", 0u32)
-        .build()?;
-
-    /* Clock Sync */
-    let video_clocksync = gstreamer::ElementFactory::make("clocksync")
-        .property("sync-to-first", true)
-        .build()?;
-
-    let audio_clocksync = gstreamer::ElementFactory::make("clocksync")
-        .property("sync-to-first", true)
         .build()?;
 
     // Add elements to the pipeline
     pipeline.add_many(&[
         webrtcsink.upcast_ref(),
+        &video_sink_queue,
+        &audio_sink_queue,
         &video_encoder,
         &caps_filter,
-        &video_queue,
-        &video_clocksync,
+        &video_source_queue,
         &video_source,
         &audio_encoder,
         &audio_capsfilter,
-        &audio_queue,
-        &audio_clocksync,
+        &audio_source_queue,
         &audio_rate,
         &audio_converter,
         &audio_source,
@@ -493,16 +498,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
         &audio_converter,
         &audio_rate,
         &audio_capsfilter,
-        &audio_queue,
-        &audio_clocksync,
+        &audio_source_queue,
         &audio_encoder,
     ])?;
 
     // Link audio parser to audio encoder if present, otherwise just webrtcsink
     if let Some(parser) = &audio_parser {
-        gstreamer::Element::link_many(&[&audio_encoder, parser, webrtcsink.upcast_ref()])?;
+        gstreamer::Element::link_many(&[
+            &audio_encoder,
+            parser,
+            &audio_sink_queue,
+            webrtcsink.upcast_ref(),
+        ])?;
     } else {
-        gstreamer::Element::link_many(&[&audio_encoder, webrtcsink.upcast_ref()])?;
+        gstreamer::Element::link_many(&[
+            &audio_encoder,
+            &audio_sink_queue,
+            webrtcsink.upcast_ref(),
+        ])?;
     }
 
     // With zero-copy..
@@ -512,26 +525,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
             gstreamer::Element::link_many(&[
                 &video_source,
                 &caps_filter,
-                &video_queue,
-                &video_clocksync,
+                &video_source_queue,
                 &vapostproc,
                 &va_caps_filter,
                 &video_encoder,
             ])?;
         } else if video_encoder_info.encoder_api == EncoderAPI::NVENC {
             // NVENC pipeline
-            gstreamer::Element::link_many(&[
-                &video_source,
-                &caps_filter,
-                &video_encoder,
-            ])?;
+            gstreamer::Element::link_many(&[&video_source, &caps_filter, &video_encoder])?;
         }
     } else {
         gstreamer::Element::link_many(&[
             &video_source,
             &caps_filter,
-            &video_queue,
-            &video_clocksync,
+            &video_source_queue,
             &video_converter.unwrap(),
             &video_encoder,
         ])?;
@@ -539,21 +546,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Link video parser if present with webrtcsink, otherwise just link webrtc sink
     if let Some(parser) = &video_parser {
-        gstreamer::Element::link_many(&[&video_encoder, parser, webrtcsink.upcast_ref()])?;
+        gstreamer::Element::link_many(&[
+            &video_encoder,
+            parser,
+            &video_sink_queue,
+            webrtcsink.upcast_ref(),
+        ])?;
     } else {
-        gstreamer::Element::link_many(&[&video_encoder, webrtcsink.upcast_ref()])?;
+        gstreamer::Element::link_many(&[
+            &video_encoder,
+            &video_sink_queue,
+            webrtcsink.upcast_ref(),
+        ])?;
     }
 
-    // Make sure QOS is disabled to avoid latency
-    video_encoder.set_property("qos", true);
+    video_source.set_property("do-timestamp", &false);
+    audio_source.set_property("do-timestamp", &false);
 
     // Optimize latency of pipeline
-    video_source
-        .sync_state_with_parent()
-        .expect("failed to sync with parent");
-    video_source.set_property("do-timestamp", &true);
-    audio_source.set_property("do-timestamp", &true);
-
     pipeline.set_property("latency", &0u64);
     pipeline.set_property("async-handling", true);
     pipeline.set_property("message-forward", true);

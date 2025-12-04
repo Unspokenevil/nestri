@@ -28,7 +28,7 @@ prost = "0.14"
 prost-types = "0.14"
 parking_lot = "0.12"
 byteorder = "1.5"
-libp2p = { version = "0.56", features = ["identify", "dns", "tcp", "noise", "ping", "tokio", "serde", "yamux", "macros", "websocket", "autonat"] }
+libp2p = { version = "0.56", features = ["identify", "dns", "tcp", "noise", "ping", "tokio", "serde", "yamux", "macros", "autonat", "quic"] }
 libp2p-identify = "0.47"
 libp2p-ping = "0.47"
 libp2p-autonat = { version = "0.15", features = ["v2"] }
@@ -37,7 +37,7 @@ libp2p-yamux = "0.47"
 libp2p-noise = "0.46"
 libp2p-dns = { version = "0.44", features = ["tokio"] }
 libp2p-tcp = { version = "0.44", features = ["tokio"] }
-libp2p-websocket = "0.45"
+libp2p-quic = { version = "0.13", features = ["tokio"] }
 dashmap = "6.1"
 anyhow = "1.0"
 unsigned-varint = "0.8"
